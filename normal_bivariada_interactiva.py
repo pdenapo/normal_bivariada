@@ -52,6 +52,8 @@ app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 # Usamos uno de los temas de default de Bootstrap https://bootswatch.com/cyborg/
 #app = dash.Dash(external_stylesheets=[dbc.themes.CYBORG])
 
+server = app.server
+
 import plotly.graph_objects as go
 
 app.layout =  dbc.Container(
