@@ -1,1 +1,1 @@
-web: gunicorn normal_bivariada:server
+web: gunicorn normal_bivariada_interactiva:server
