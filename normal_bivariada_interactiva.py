@@ -31,8 +31,6 @@ class normal_bivariada:
         for i in range(X.shape[0]):
             for j in range(X.shape[1]):
                 self.densidad[i,j] = self.distribucion.pdf([X[i,j], Y[i,j]])
-    def generar_al_azar(self,tamaño):
-        return self.distribucion.rvs(size = tamaño)
     def maxima_densidad(self):
         return self.distribucion.pdf([0,0])
 
@@ -173,6 +171,6 @@ def update_figure(check_box_value,sigma_x,sigma_y,rho):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(description='Caminata al azar')
-    parser.add_argument("--debug", action='store_true', help='denug')
+    parser.add_argument("--debug", action='store_true', help='debug')
     args = parser.parse_args()
     app.run_server(debug=args.debug)
