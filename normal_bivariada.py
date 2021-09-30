@@ -1,5 +1,5 @@
-# Run this app with `python app.py` and
-# visit http://127.0.0.1:8050/ in your web browser.
+
+# Programa para mostrar la normal bivariada interactivamente usando plotly y dash
 
 import dash
 import dash_core_components as dcc
@@ -33,15 +33,20 @@ class normal_bivariada:
                 self.densidad[i,j] = self.distribucion.pdf([X[i,j], Y[i,j]])
     def generar_al_azar(self,tamaño):
         return self.distribucion.rvs(size = tamaño)
-    
+    def maxima_densidad(self):
+        return self.distribucion.pdf([0,0])
+
+#Tamaño del cuadrado en el que vamos a trabajar
+R=5
+
 # Definimos la grilla que vamos a usar
-x = np.linspace(-3, 3, num=100)
-y = np.linspace(-3, 3, num=100)
+x = np.linspace(-R, R, num=100)
+y = np.linspace(-R, R, num=100)
 X, Y = np.meshgrid(x,y)
-                   
-mi_distribucion=normal_bivariada(1,1,0)
-mi_distribucion.evaluar_densidad_en_una_grilla(X,Y)
-mi_distribucion.distribucion.pdf([0.0,0.0])
+
+# 	https://www.htmlsymbols.xyz/unicode/
+sigma_en_html='\u03C3'                   
+rho_en_html='\u03C1'
 
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 # Usamos uno de los temas de default de Bootstrap https://bootswatch.com/cyborg/
@@ -56,6 +61,38 @@ html.Div(children=[
     html.H2(children='Un ejemplo importante de distribución de un vector aleatorio',className="pt-3 text-center"), 
     html.H2(children='con aplicaciones en estadística.', className="pt-1 text-center"),
 
+        html.Div([
+        dcc.Slider(
+        id='sigma_x-slider',
+        min=0,
+        max=3,
+        step=0.1,
+        value=1
+        ),     
+        html.Div(id='sigma_x-slider-output-container',className="text-center")]),
+
+         html.Div([
+        dcc.Slider(
+        id='sigma_y-slider',
+        min=0,
+        max=3,
+        step=0.1,
+        value=1
+        ),     
+        html.Div(id='sigma_y-slider-output-container',className="text-center")]),
+
+         html.Div([
+        dcc.Slider(
+        id='rho-slider',
+        min=0,
+        max=1,
+        step=0.05,
+        value=0
+        ),     
+        html.Div(id='rho-slider-output-container',className="text-center")]),
+
+
+
     # Para que el código funcione es fundamental darle un valor inicial a value!
     dcc.Checklist(
     options=[
@@ -64,29 +101,59 @@ html.Div(children=[
         {'label': 'Contornos en z', 'value': 'Z'}
     ], id='my-checkbox', value=[]),
 
-    html.Div(id='my-output'),
+    #html.Div(id='checkbox-output'),
 
     dcc.Graph(id='my-graph')
 ]))
 
+#@app.callback(
+#    Output(component_id='checkbox-output', component_property='children'),
+#    Input(component_id='my-checkbox', component_property='value')
+#)
+#def update_output_div(input_value):
+#    return 'Output: {}'.format(input_value)
+
 @app.callback(
-    Output(component_id='my-output', component_property='children'),
-    Input(component_id='my-checkbox', component_property='value')
+    Output('sigma_x-slider-output-container', 'children'),
+    Input('sigma_x-slider', 'value')
 )
-def update_output_div(input_value):
-    return 'Output: {}'.format(input_value)
+def update_output(value):
+    return sigma_en_html+'_x='+format(value)
+
+@app.callback(
+    Output('sigma_y-slider-output-container', 'children'),
+    Input('sigma_y-slider', 'value')
+)
+def update_output(value):
+    return sigma_en_html+'_y='+format(value)
+
+
+@app.callback(
+    Output('rho-slider-output-container', 'children'),
+    Input('rho-slider', 'value')
+)
+def update_output(value):
+    return rho_en_html+'='+format(value)
+
+
+def update_output(value):
+    return sigma_en_html+'_y='+format(value)    
 
 @app.callback(
     Output(component_id='my-graph', component_property='figure'),
-    Input(component_id='my-checkbox', component_property='value')
+    Input(component_id='my-checkbox', component_property='value'),
+    Input('sigma_x-slider', 'value'),
+    Input('sigma_y-slider', 'value'),
+    Input('rho-slider', 'value')
 )
-def update_figure(input_value):
-    print(input_value)
+def update_figure(check_box_value,sigma_x,sigma_y,rho):
+    mi_distribucion=normal_bivariada(float(sigma_x),float(sigma_y),float(rho))
+    mi_distribucion.evaluar_densidad_en_una_grilla(X,Y)
     fig = go.Figure(go.Surface(
     contours = {
-         "z": {"show": 'Z' in input_value , "start": 0.0, "end": 0.20, "size": 0.01,"color":"white"},
-         "x": {"show": 'X' in input_value, "start": -3.0, "end": 3.0, "size": 0.5,},
-         "y": {"show": 'Y' in input_value, "start": -3.0, "end": 3.0, "size": 0.5}
+         "z": {"show": 'Z' in check_box_value , "start": 0.0, "end": mi_distribucion.maxima_densidad(), "size": 0.01,"color":"white"},
+         "x": {"show": 'X' in check_box_value, "start": -R, "end": R, "size": 0.5,},
+         "y": {"show": 'Y' in check_box_value, "start": -R, "end": R, "size": 0.5}
     },
     x = x,
     y = y,
@@ -95,7 +162,7 @@ def update_figure(input_value):
         scene = {
             "xaxis": {"nticks": 20},
             "yaxis": {"nticks": 20},
-            "zaxis": {"nticks": 4,'range':[-0.1, 0.2] },
+            "zaxis": {"nticks": 4,'range':[-0.1, mi_distribucion.maxima_densidad()*1.2] },
             'camera_eye': {"x": 0, "y": -1, "z": 0.5},
             "aspectratio": {"x": 1, "y": 1, "z": 1}
         })
