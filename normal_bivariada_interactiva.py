@@ -9,6 +9,13 @@ from dash import html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
+# No usamos este módulo directamente
+# Plotly express necesita esto en los requirements para que 
+# pip freeze > requirements.txt
+# funcione correctamente
+# (con la regresión lineal que hacemos en el gráfico de puntos al azar)
+import statsmodels
+
 import plotly.express as px
 #import pandas as pd
 
